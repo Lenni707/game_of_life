@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 
-const GRID_WIDTH: usize = 200;
-const GRID_HEIGHT: usize = 150;
+const GRID_WIDTH: usize = 80;
+const GRID_HEIGHT: usize = 60;
 const CELL_SIZE: f32 = 10.0;
 const UPDATE_INTERVAL: f32 = 0.1; // Zeit alle x. sekunde
 
@@ -169,7 +169,6 @@ impl World {
         } 
     }
 }
-
 
 #[macroquad::main("Game of Life")]
 async fn main() {

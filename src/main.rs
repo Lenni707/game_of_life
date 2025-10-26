@@ -3,7 +3,7 @@ use macroquad::prelude::*;
 const GRID_WIDTH: usize = 200;
 const GRID_HEIGHT: usize = 150;
 const CELL_SIZE: f32 = 10.0;
-const UPDATE_INTERVAL: f32 = 0.5; // Zeit alle x. sekunde
+const UPDATE_INTERVAL: f32 = 0.1; // Zeit alle x. sekunde
 
 #[derive(Clone, Copy, PartialEq)]
 enum Cell {
@@ -59,6 +59,22 @@ impl World {
                     color
                 );
             }
+        }
+    }
+    fn draw_grid_lines(&self) { // macht so geile lines aber von chatty gemacht, weil ich zu faul war
+        let width = GRID_WIDTH as f32 * CELL_SIZE;
+        let height = GRID_HEIGHT as f32 * CELL_SIZE;
+        // Vertikal
+        for x in 0..=GRID_WIDTH {
+            let x_pos = x as f32 * CELL_SIZE;
+            draw_line(x_pos, 0.0, x_pos, height, 1.0, Color::new(0.4, 0.4, 0.4, 1.0) // bisschen heller als der hintergrund
+);
+        }
+        // Horizontal
+        for y in 0..=GRID_HEIGHT {
+            let y_pos = y as f32 * CELL_SIZE;
+            draw_line(0.0, y_pos, width, y_pos, 1.0, Color::new(0.4, 0.4, 0.4, 1.0)
+);
         }
     }
     fn check_neighbors(grid: &Vec<Vec<Cell>>, x: usize, y: usize) -> u32 { // es muss aus dem alten grid ausgelsen werden, nicht dem neuen
@@ -140,6 +156,18 @@ impl World {
         }
     }
 
+    fn reseted(&mut self) { // r um das grid zurückzusetzen aber von chatty gemacht weil ich zu faul war
+        if is_key_pressed(KeyCode::R) {
+            for y in 0..GRID_HEIGHT {
+                for x in 0..GRID_WIDTH {
+                    self.grid[y][x] = Cell::Empty;
+                }
+            }
+            self.running = false;
+            self.timer = 0.0;
+            println!("Grid reseted")
+        } 
+    }
 }
 
 
@@ -148,10 +176,11 @@ async fn main() {
     let mut game = World::new();
 
     loop {
-        clear_background(BLACK);
+        clear_background(DARKGRAY);
         
         game.space_pressed();
         game.left_click();
+        game.reseted();
         
         if game.running {
             game.timer += get_frame_time();
@@ -162,6 +191,7 @@ async fn main() {
         }
         
         game.draw();
+        game.draw_grid_lines();
 
         next_frame().await
     }

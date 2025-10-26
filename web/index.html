@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The Game of Life</title>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #fafafa;
+      color: #333;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      margin-top: 2rem;
+      color: #444;
+    }
+    canvas {
+      max-width: 100%;
+      width: 800px;
+      height: 600px;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      background: white;
+    }
+    p {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: #555;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    ul {
+      text-align: left;
+      display: inline-block;
+      margin: 1rem auto;
+      padding-left: 1.5rem;
+      color: #444;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .wrap {
+      display: grid;
+      gap: 24px;
+      margin-top: 3rem;
+      justify-content: center;
+    }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      background: white;
+    }
+    .btn {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+    }
+    .btn button {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: all 0.2s ease-in-out;
+    }
+    .btn button:hover {
+      background-color: #4338ca;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    .btn button:active {
+      transform: translateY(0);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <h1>The Game of Life</h1>
+  {% include 'navbar.html' %}
+
+  <div class="wrap">
+    <canvas id="glcanvas" tabindex="1"></canvas>
+  </div>
+  <p>The Game of Life made with <strong>Macroquad</strong> (WASM).</p>
+  <p>A desktop version is available <a href="https://github.com/Lenni707/game_of_life">here</a>.</p>
+
+  <h2>Controls</h2>
+  <ul>
+    <li><strong>Left Click</strong> — Toggle cells (alive/dead)</li>
+    <li><strong>Space</strong> — Pause or resume the simulation</li>
+    <li><strong>R</strong> — Reset and clear the board</li>
+  </ul>
+
+  <h2>How it works</h2>
+  <ul>
+    <li>Each square (cell) can be <strong>alive</strong> (green) or <strong>dead</strong> (empty).</li>
+    <li>Every generation, the following rules apply:</li> 
+    <ul>
+      <li>A live cell with fewer than 2 live neighbors <strong>dies</strong> (underpopulation).</li>
+      <li>A live cell with 2 or 3 live neighbors <strong>stays alive</strong>.</li>
+      <li>A live cell with more than 3 live neighbors <strong>dies</strong> (overpopulation).</li>
+      <li>A dead cell with exactly 3 live neighbors <strong>becomes alive</strong> (reproduction).</li>
+    </ul>
+  </ul>
+
+  <script src="https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js"></script>
+  <script>
+    load("../target/wasm32-unknown-unknown/release/game_of_life.wasm");
+  </script>
+</body>
+</html>

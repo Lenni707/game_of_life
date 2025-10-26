@@ -1,3 +1,168 @@
-fn main() {
-    println!("Hello, world!");
+use macroquad::prelude::*;
+
+const GRID_WIDTH: usize = 200;
+const GRID_HEIGHT: usize = 150;
+const CELL_SIZE: f32 = 10.0;
+const UPDATE_INTERVAL: f32 = 0.5; // Zeit alle x. sekunde
+
+#[derive(Clone, Copy, PartialEq)]
+enum Cell {
+    Empty,
+    Filled
+}
+
+struct World {
+    grid: Vec<Vec<Cell>>,
+    running: bool,
+    timer: f32
+}
+
+impl World {
+    fn new() -> Self {
+        Self {
+            grid: vec![vec![Cell::Empty; GRID_WIDTH]; GRID_HEIGHT],
+            running: false,
+            timer: 0.0
+        }
+    }
+    fn get(&self, x: usize, y: usize) -> Option<Cell> {
+        self.grid.get(y)?.get(x).copied() // ka hatte timon auch
+    }
+
+    fn set(&mut self, x: usize, y: usize, cell: Cell) {
+        if y < GRID_HEIGHT && x < GRID_WIDTH {
+            self.grid[y][x] = cell;
+        }
+    }
+
+    fn is_empty(&self, x: usize, y: usize) -> bool {
+        let cell = self.get(x, y);
+        if cell == Some(Cell::Empty) {
+            return true
+        }
+        return false
+    }
+    fn draw(&self) {
+        for y in 0..GRID_HEIGHT {
+            for x in 0..GRID_WIDTH {
+                let cell = self.grid[y][x];
+                let color =  match cell {
+                    Cell::Empty => continue,
+                    Cell::Filled => GREEN
+                };
+
+                draw_rectangle(
+                    x as f32 * CELL_SIZE, 
+                    y as f32 * CELL_SIZE, 
+                    CELL_SIZE,
+                    CELL_SIZE,
+                    color
+                );
+            }
+        }
+    }
+    fn check_neighbors(grid: &Vec<Vec<Cell>>, x: usize, y: usize) -> u32 { // es muss aus dem alten grid ausgelsen werden, nicht dem neuen
+        let x = x as i32;
+        let y = y as i32;
+
+        let neighbors = [ // alle möglichen felder um die cell
+            (x + 1, y),
+            (x - 1, y),
+            (x, y + 1),
+            (x, y - 1),
+            (x + 1, y + 1),
+            (x + 1, y - 1),
+            (x - 1, y + 1),
+            (x - 1, y - 1),
+        ];
+
+        let mut count = 0;
+        for (nx, ny) in neighbors {
+            if nx < 0 || ny < 0 || nx >= GRID_WIDTH as i32 || ny >= GRID_HEIGHT as i32 {
+                continue;
+            }
+            if grid[ny as usize][nx as usize] == Cell::Filled {
+                count += 1;
+            }
+        }
+        count // return die anzahl der gefühlten cellen
+    }
+    fn update(&mut self) {
+        // man muss das grid clonen weil man nicht in dem aktuellen grid gleichzeitig, durch iterieren 
+        // und bearbeiten soll, damit die neuen Cells die alten nicht beeinflussen
+        let old_grid = self.grid.clone();
+
+        for y in 0..GRID_HEIGHT {
+            for x in 0..GRID_WIDTH {
+                let cell = old_grid[y][x];
+                let neighbors = Self::check_neighbors(&old_grid, x, y);
+
+                self.grid[y][x] = match cell {
+                    Cell::Empty => {
+                        if neighbors == 3 {
+                            Cell::Filled
+                        } else {
+                            Cell::Empty
+                        }
+                    }
+                    Cell::Filled => {
+                        if neighbors < 2 || neighbors > 3 {
+                            Cell::Empty
+                        } else {
+                            Cell::Filled
+                        }
+                    }
+                };
+            }
+        }
+    }
+
+    fn left_click(&mut self) {
+        if is_mouse_button_pressed(MouseButton::Left) {
+            let (mouse_x, mouse_y) = mouse_position();
+            
+            let grid_x = (mouse_x / CELL_SIZE) as usize;
+            let grid_y = (mouse_y / CELL_SIZE) as usize;
+            
+            if self.is_empty(grid_x, grid_y) {
+                self.set(grid_x, grid_y, Cell::Filled);
+            }
+            else {
+                self.set(grid_x, grid_y, Cell::Empty);
+            }            
+        }
+    }
+
+    fn space_pressed(&mut self) {
+        if is_key_pressed(KeyCode::Space) {
+            self.running = !self.running;
+            println!("game stopped")     
+        }
+    }
+
+}
+
+
+#[macroquad::main("Game of Life")]
+async fn main() {
+    let mut game = World::new();
+
+    loop {
+        clear_background(BLACK);
+        
+        game.space_pressed();
+        game.left_click();
+        
+        if game.running {
+            game.timer += get_frame_time();
+            if game.timer >= UPDATE_INTERVAL { // je nach Interval x mal pro sekunde aufrufen
+                game.update();
+                game.timer = 0.0;
+            }
+        }
+        
+        game.draw();
+
+        next_frame().await
+    }
 }

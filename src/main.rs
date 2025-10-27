@@ -26,7 +26,7 @@ impl World {
         }
     }
     fn get(&self, x: usize, y: usize) -> Option<Cell> {
-        self.grid.get(y)?.get(x).copied() // ka hatte timon auch
+        self.grid.get(y)?.get(x).copied() // ka
     }
 
     fn set(&mut self, x: usize, y: usize, cell: Cell) {

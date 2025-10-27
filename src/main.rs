@@ -134,19 +134,41 @@ impl World {
     }
 
     fn left_click(&mut self) {
-        if is_mouse_button_pressed(MouseButton::Left) {
-            let (mouse_x, mouse_y) = mouse_position();
-            
-            let grid_x = (mouse_x / CELL_SIZE) as usize;
-            let grid_y = (mouse_y / CELL_SIZE) as usize;
-            
-            if self.is_empty(grid_x, grid_y) {
-                self.set(grid_x, grid_y, Cell::Filled);
-            }
-            else {
-                self.set(grid_x, grid_y, Cell::Empty);
-            }            
+        let (mouse_x, mouse_y) = mouse_position();
+        let grid_x = (mouse_x / CELL_SIZE) as usize;
+        let grid_y = (mouse_y / CELL_SIZE) as usize;
+
+        if grid_x >= GRID_WIDTH || grid_y >= GRID_HEIGHT {
+            return;
         }
+
+        // setzt draw mode also entwerde erease oder place
+        static mut DRAW_MODE: Option<Cell> = None;
+
+        // draw mode wird entschieden
+        if is_mouse_button_pressed(MouseButton::Left) {
+            unsafe {
+                DRAW_MODE = if self.is_empty(grid_x, grid_y) {
+                    Some(Cell::Filled)
+                } else {
+                    Some(Cell::Empty)
+                };
+            }
+        }
+
+        if is_mouse_button_down(MouseButton::Left) {
+            unsafe {
+                if let Some(mode) = DRAW_MODE {
+                    self.set(grid_x, grid_y, mode);
+                }
+            }
+        }
+
+        if is_mouse_button_released(MouseButton::Left) {
+            unsafe {
+                DRAW_MODE = None;
+            }
+    }
     }
 
     fn space_pressed(&mut self) {
@@ -156,7 +178,7 @@ impl World {
         }
     }
 
-    fn reseted(&mut self) { // r um das grid zurückzusetzen aber von chatty gemacht weil ich zu faul war
+    fn handle_keys(&mut self) { // r um das grid zurückzusetzen aber von chatty gemacht weil ich zu faul war
         if is_key_pressed(KeyCode::R) {
             for y in 0..GRID_HEIGHT {
                 for x in 0..GRID_WIDTH {
@@ -166,11 +188,24 @@ impl World {
             self.running = false;
             self.timer = 0.0;
             println!("Grid reseted")
-        } 
+        }
+        if is_key_pressed(KeyCode::Right) {
+            self.update(); // jumps one frame each click
+        }
     }
 }
 
-#[macroquad::main("Game of Life")]
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Game of Life".to_string(),
+        high_dpi: true, // this line enables high-DPI scaling
+        window_width: (GRID_WIDTH as f32 * CELL_SIZE) as i32,
+        window_height: (GRID_HEIGHT as f32 * CELL_SIZE) as i32,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
 async fn main() {
     let mut game = World::new();
 
@@ -179,7 +214,7 @@ async fn main() {
         
         game.space_pressed();
         game.left_click();
-        game.reseted();
+        game.handle_keys();
         
         if game.running {
             game.timer += get_frame_time();
